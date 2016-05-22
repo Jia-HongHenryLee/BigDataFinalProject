@@ -2,3 +2,4 @@ TwitterAPI
 tweepy
 pymongo
 TextBlob
+joblib
