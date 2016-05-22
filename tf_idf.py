@@ -4,6 +4,7 @@ from pymongo import MongoClient
 from nltk.corpus import stopwords
 import re
 import string
+from joblib import Parallel, delayed
 
 class Example:
   def __init__(self, value):
@@ -109,8 +110,11 @@ count2 = count
 print(count)
 for i, blob in enumerate(bloblist):
 	print("Top words in document {}".format(i + 1))	
-	scores = {word: tfidf(word, blob, bloblist) for word in blob.words}
-	print(scores)
+	scores = {}
+	for word in blob.words:
+		scores[word] = tfidf(word, blob, bloblist)
+	# scores = {word: tfidf(word, blob, bloblist) for word in blob.words}
+	
 	sorted_words = sorted(scores.items(), key=lambda x: x[1], reverse=True)	
 	for word, score in sorted_words:
 		print("\tWord: {}, TF-IDF: {}".format(word, score))
