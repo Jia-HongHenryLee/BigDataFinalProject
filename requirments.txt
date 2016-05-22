@@ -1,0 +1,4 @@
+TwitterAPI
+tweepy
+pymongo
+TextBlob
