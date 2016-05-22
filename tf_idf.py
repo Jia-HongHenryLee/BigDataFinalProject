@@ -4,10 +4,18 @@ from pymongo import MongoClient
 from nltk.corpus import stopwords
 import re
 import string
-global count
-global ericping
+
+class Example:
+  def __init__(self, value):
+    self.delta = value
+  def gmm(self):
+    self.delta += 1
+    return self.delta
+
+global king
+king = Example(0)
 count = 0
-ericping = 0
+count2 = 0
 emoticons_str = r"""
     (?:
         [:=;] # Eyes
@@ -73,8 +81,7 @@ def idf(word, bloblist):
 		return math.log(count / (1 + n_containing(word, bloblist)))
 
 def tfidf(word, blob, bloblist):
-	print(count)
-	print('a' + str(ericping))
+	print(king.gmm())
 	return tf(word, blob) * idf(word, bloblist)
 
 bloblist = []
@@ -93,19 +100,18 @@ for data in db.raw_data.find():
 
 	all_content = all_content + ' ' + data['text']
 	count = count + 1
-	if count == 5:
+	if count == 500:
 		break
 
 # print(all_content)
 bloblist.append(tb(preprocess(all_content, True)))
-ericping = count
+count2 = count
 print(count)
-print(ericping)
 for i, blob in enumerate(bloblist):
 	print("Top words in document {}".format(i + 1))	
 	scores = {word: tfidf(word, blob, bloblist) for word in blob.words}
-
+	print(scores)
 	sorted_words = sorted(scores.items(), key=lambda x: x[1], reverse=True)	
 	for word, score in sorted_words:
-		print("\tWord: {}, TF-IDF: {}".format(word, round(score, 5)))
+		print("\tWord: {}, TF-IDF: {}".format(word, score))
 
