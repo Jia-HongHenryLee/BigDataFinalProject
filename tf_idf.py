@@ -5,6 +5,7 @@ from nltk.corpus import stopwords
 import re
 import string
 from joblib import Parallel, delayed
+import multiprocessing
 
 class Example:
   def __init__(self, value):
@@ -108,13 +109,21 @@ for data in db.raw_data.find():
 bloblist.append(tb(preprocess(all_content, True)))
 count2 = count
 print(count)
+
+num_cores = multiprocessing.cpu_count()
+
+def processInput(word, blog, bloblist):
+	result = tfidf(word, blob, bloblist)
+	return [word, result]
+
 for i, blob in enumerate(bloblist):
 	print("Top words in document {}".format(i + 1))	
 	scores = {}
-	for word in blob.words:
-		scores[word] = tfidf(word, blob, bloblist)
-	# scores = {word: tfidf(word, blob, bloblist) for word in blob.words}
+	raw_result = Parallel(n_jobs=num_cores)(delayed(processInput)(word, blob, bloblist) for word in blob.words)
+	for item in raw_result:
+		scores[item[0]] = item[1]
 	
+	print(scores)
 	sorted_words = sorted(scores.items(), key=lambda x: x[1], reverse=True)	
 	for word, score in sorted_words:
 		print("\tWord: {}, TF-IDF: {}".format(word, score))
