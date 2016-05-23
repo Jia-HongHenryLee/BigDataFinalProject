@@ -6,6 +6,7 @@ import re
 import string
 from joblib import Parallel, delayed
 import multiprocessing
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 class Example:
   def __init__(self, value):
@@ -97,34 +98,63 @@ db = client.marvel
 
 all_content = ''
 
+corpus = []
+count = 0
 for data in db.raw_data.find():
-	# processed_test = preprocess(data['text'], True)
+	corpus.append(preprocess(data['text'], True))
+	# if count == 100:
+		# break
 
-	all_content = all_content + ' ' + data['text']
-	count = count + 1
-	if count == 500:
-		break
+tf = TfidfVectorizer(analyzer='word', min_df=1, stop_words='english')
+tfidf_matrix = tf.fit_transform(corpus)
+feature_names = tf.get_feature_names()
+# print(tfidf_matrix)
+idf = tf.idf_
+for doc in tfidf_matrix.todense():
+    # print("Document %d" %(doc_id))
+    word_id = 0
+    for score in doc.tolist()[0]:
+        if score > 0:
+            word = feature_names[word_id]
+            print("\tWord: {}, TF-IDF: {}".format(word, score))
+            # writer.writerow([doc_id+1, word.encode("utf-8"), score])
+        word_id +=1
+    # doc_id +=1
 
-# print(all_content)
-bloblist.append(tb(preprocess(all_content, True)))
-count2 = count
-print(count)
+# print()
+# result = dict(zip(tf.get_feature_names(), tfidf_matrix))
+# sorted_words = sorted(result.items(), key=lambda x: x[1], reverse=True)	
+# for word, score in sorted_words[:20]:
+	# print("\tWord: {}, TF-IDF: {}".format(word, score))
 
-num_cores = multiprocessing.cpu_count()
+# for data in db.raw_data.find():
+# 	# processed_test = preprocess(data['text'], True)
 
-def processInput(word, blog, bloblist):
-	result = tfidf(word, blob, bloblist)
-	return [word, result]
+# 	all_content = all_content + ' ' + data['text']
+# 	count = count + 1
+# 	if count == 1000:
+# 		break
 
-for i, blob in enumerate(bloblist):
-	print("Top words in document {}".format(i + 1))	
-	scores = {}
-	raw_result = Parallel(n_jobs=num_cores)(delayed(processInput)(word, blob, bloblist) for word in blob.words)
-	for item in raw_result:
-		scores[item[0]] = item[1]
+# # print(all_content)
+# bloblist.append(tb(preprocess(all_content, True)))
+# count2 = count
+# print(count)
+
+# num_cores = multiprocessing.cpu_count()
+
+# def processInput(word, blog, bloblist):
+# 	result = tfidf(word, blob, bloblist)
+# 	return [word, result]
+
+# for i, blob in enumerate(bloblist):
+# 	print("Top words in document {}".format(i + 1))	
+# 	scores = {}
+# 	raw_result = Parallel(n_jobs=num_cores)(delayed(processInput)(word, blob, bloblist) for word in blob.words)
+# 	for item in raw_result:
+# 		scores[item[0]] = item[1]
 	
-	print(scores)
-	sorted_words = sorted(scores.items(), key=lambda x: x[1], reverse=True)	
-	for word, score in sorted_words:
-		print("\tWord: {}, TF-IDF: {}".format(word, score))
+# 	print(scores)
+# 	sorted_words = sorted(scores.items(), key=lambda x: x[1], reverse=True)	
+# 	for word, score in sorted_words[:10]:
+# 		print("\tWord: {}, TF-IDF: {}".format(word, score))
 
