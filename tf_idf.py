@@ -104,8 +104,9 @@ for data in db.raw_data.find():
   corpus.append(preprocess(data['text'], True))
   # corpus.append(data['text'])
   count = count + 1
-  if count == 10000:
-    break
+  print(count)
+  # if count == 10000:
+    # break
 
 tf = TfidfVectorizer(analyzer='word', min_df=1, stop_words='english')
 tfidf_matrix = tf.fit_transform(corpus)
@@ -135,9 +136,16 @@ for doc in tfidf_matrix.todense():
     # doc_id +=1
 
 # print(word_data)
+text_file = open("output.txt", "w")
+all_content = ''
 sorted_words = sorted(word_data.items(), key=lambda x: x[1], reverse=True) 
-for key, score in sorted_words[:300]:
-  print("\tWord: {}, TF-IDF: {}".format(key, score))
+for key, score in sorted_words[:500]:
+  text = ("Word: {}, TF-IDF: {}".format(key, score) + "\n")
+  print(text)
+  all_content = all_content + text
+
+text_file.write(all_content)
+text_file.close()
 # print()
 # result = dict(zip(tf.get_feature_names(), tfidf_matrix))
 # sorted_words = sorted(result.items(), key=lambda x: x[1], reverse=True)	
