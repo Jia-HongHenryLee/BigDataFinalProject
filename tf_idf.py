@@ -101,26 +101,43 @@ all_content = ''
 corpus = []
 count = 0
 for data in db.raw_data.find():
-	corpus.append(preprocess(data['text'], True))
-	# if count == 100:
-		# break
+  corpus.append(preprocess(data['text'], True))
+  # corpus.append(data['text'])
+  count = count + 1
+  if count == 5:
+    break
 
 tf = TfidfVectorizer(analyzer='word', min_df=1, stop_words='english')
 tfidf_matrix = tf.fit_transform(corpus)
 feature_names = tf.get_feature_names()
+# print(feature_names)
+print(corpus)
 # print(tfidf_matrix)
+
 idf = tf.idf_
+word_data = {}
 for doc in tfidf_matrix.todense():
-    # print("Document %d" %(doc_id))
+    #print("Document %d" %(doc_id))
     word_id = 0
+    # print(doc.tolist()[0])
     for score in doc.tolist()[0]:
         if score > 0:
             word = feature_names[word_id]
-            print("\tWord: {}, TF-IDF: {}".format(word, score))
+            if word not in word_data:
+              word_data[word] = 0
+
+            # print(word_data)
+            word_data[word] = word_data[word] + score
+            # print("\tWord: {}, TF-IDF: {}".format(word, score))
             # writer.writerow([doc_id+1, word.encode("utf-8"), score])
         word_id +=1
+        #print(word_id)
     # doc_id +=1
 
+# print(word_data)
+sorted_words = sorted(word_data.items(), key=lambda x: x[1], reverse=True) 
+for key, score in sorted_words:
+  print("\tWord: {}, TF-IDF: {}".format(key, score))
 # print()
 # result = dict(zip(tf.get_feature_names(), tfidf_matrix))
 # sorted_words = sorted(result.items(), key=lambda x: x[1], reverse=True)	
