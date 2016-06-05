@@ -3,3 +3,7 @@ tweepy
 pymongo
 TextBlob
 joblib
+sklearn
+scipy
+numpy
+matplotlib

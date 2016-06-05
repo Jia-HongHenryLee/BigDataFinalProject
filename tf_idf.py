@@ -87,99 +87,67 @@ def tfidf(word, blob, bloblist):
 	print(king.gmm())
 	return tf(word, blob) * idf(word, bloblist)
 
-bloblist = []
-client = MongoClient('localhost:27017')
-db = client.marvel
+def run_and_go(collection_name, new_collection_name):
+  bloblist = []
+  client = MongoClient('localhost:27017')
+  db = client.marvel
 
-# for data in db.raw_data.find():
-# 	processed_test = preprocess(data['text'], True)	
-# 	tb_result = tb(processed_test)
-# 	bloblist.append(tb_result)
+  # for data in db.raw_data.find():
+  # 	processed_test = preprocess(data['text'], True)	
+  # 	tb_result = tb(processed_test)
+  # 	bloblist.append(tb_result)
 
-all_content = ''
 
-corpus = []
-count = 0
-for data in db.raw_data.find():
-  corpus.append(preprocess(data['text'], True))
-  # corpus.append(data['text'])
-  count = count + 1
-  print(count)
-  # if count == 10000:
-    # break
+  corpus = []
+  count = 0
+  for data in db[collection_name].find():
+    corpus.append(preprocess(data['text'], True))
+    # corpus.append(data['text'])
+    count = count + 1  
+    if count == 50000:
+      break
 
-tf = TfidfVectorizer(analyzer='word', min_df=1, stop_words='english')
-tfidf_matrix = tf.fit_transform(corpus)
-feature_names = tf.get_feature_names()
-# print(feature_names)
-print(corpus)
-# print(tfidf_matrix)
+  tf = TfidfVectorizer(analyzer='word', min_df=1, stop_words='english')
+  tfidf_matrix = tf.fit_transform(corpus)
+  feature_names = tf.get_feature_names()
+  # print(tfidf_matrix)
+  idf = tf.idf_
+  word_data = {}
+  for doc in tfidf_matrix.todense():
+      #print("Document %d" %(doc_id))
+      print(len(doc.tolist()[0]))
+      word_id = 0
 
-idf = tf.idf_
-word_data = {}
-for doc in tfidf_matrix.todense():
-    #print("Document %d" %(doc_id))
-    word_id = 0
-    # print(doc.tolist()[0])
-    for score in doc.tolist()[0]:
-        if score > 0:
-            word = feature_names[word_id]
-            if word not in word_data:
-              word_data[word] = 0
+      for score in doc.tolist()[0]:
+          if score > 0:
+              word = feature_names[word_id]
+              if word not in word_data:
+                word_data[word] = 0
+              # print(word_data)
+              word_data[word] = word_data[word] + score
+              # writer.writerow([doc_id+1, word.encode("utf-8"), score])
+          word_id +=1
+          #print(word_id)
+      # doc_id +=1
 
-            # print(word_data)
-            word_data[word] = word_data[word] + score
-            # print("\tWord: {}, TF-IDF: {}".format(word, score))
-            # writer.writerow([doc_id+1, word.encode("utf-8"), score])
-        word_id +=1
-        #print(word_id)
-    # doc_id +=1
+  # print(word_data)  
+  print('before sorting')
+  sorted_words = sorted(word_data.items(), key=lambda x: x[1], reverse=True) 
+  print('after sorting')
 
-# print(word_data)
-text_file = open("output.txt", "w")
-all_content = ''
-sorted_words = sorted(word_data.items(), key=lambda x: x[1], reverse=True) 
-for key, score in sorted_words[:500]:
-  text = ("Word: {}, TF-IDF: {}".format(key, score) + "\n")
-  print(text)
-  all_content = all_content + text
+  data_list = []
 
-text_file.write(all_content)
-text_file.close()
-# print()
-# result = dict(zip(tf.get_feature_names(), tfidf_matrix))
-# sorted_words = sorted(result.items(), key=lambda x: x[1], reverse=True)	
-# for word, score in sorted_words[:20]:
-	# print("\tWord: {}, TF-IDF: {}".format(word, score))
+  for key, score in sorted_words:
+    text = ("Word: {}, TF-IDF: {}".format(key, score) + "\n")  
+    data_list.append({'key': key, 'score': score})
 
-# for data in db.raw_data.find():
-# 	# processed_test = preprocess(data['text'], True)
+  print(data_list)
+  db[new_collection_name].insert(data_list)
+  # text_file = open("output.txt", "w")
+  # text_file.write(all_content)
+  # text_file.close()
 
-# 	all_content = all_content + ' ' + data['text']
-# 	count = count + 1
-# 	if count == 1000:
-# 		break
+collection_list = ['captainamerica','hulk','ironman','spiderman','thor']
 
-# # print(all_content)
-# bloblist.append(tb(preprocess(all_content, True)))
-# count2 = count
-# print(count)
-
-# num_cores = multiprocessing.cpu_count()
-
-# def processInput(word, blog, bloblist):
-# 	result = tfidf(word, blob, bloblist)
-# 	return [word, result]
-
-# for i, blob in enumerate(bloblist):
-# 	print("Top words in document {}".format(i + 1))	
-# 	scores = {}
-# 	raw_result = Parallel(n_jobs=num_cores)(delayed(processInput)(word, blob, bloblist) for word in blob.words)
-# 	for item in raw_result:
-# 		scores[item[0]] = item[1]
-	
-# 	print(scores)
-# 	sorted_words = sorted(scores.items(), key=lambda x: x[1], reverse=True)	
-# 	for word, score in sorted_words[:10]:
-# 		print("\tWord: {}, TF-IDF: {}".format(word, score))
-
+for name in collection_list:
+  run_and_go(name, 'new_' + name)
