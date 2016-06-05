@@ -2,6 +2,7 @@ import math
 from textblob import TextBlob as tb
 from pymongo import MongoClient
 from nltk.corpus import stopwords
+import json
 import re
 import string
 from joblib import Parallel, delayed
@@ -147,7 +148,7 @@ def run_and_go(collection_name, new_collection_name):
   # text_file.write(all_content)
   # text_file.close()
 
-collection_list = ['captainamerica','hulk','ironman','spiderman','thor']
+collection_list = ['captainamerica', 'hulk', 'ironman', 'spiderman', 'thor']
 
 for name in collection_list:
   run_and_go(name, 'new_' + name)
